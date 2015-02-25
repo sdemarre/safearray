@@ -1,0 +1,15 @@
+(in-package :safearray)
+
+(defmacro com-call (&body body)
+  (alexandria::with-gensyms (hresult)
+    `(let ((,hresult (progn ,@body)))
+       (unless (succeeded ,hresult)
+	 (handle-com-error ,hresult)))))
+
+(defmacro com-call-with-foreign-result (foreign-result foreign-result-type &body body)
+  (alexandria:with-gensyms (hresult)
+    `(cffi:with-foreign-object (,foreign-result ,foreign-result-type)
+       (let ((,hresult (progn ,@body)))
+	 (if (succeeded ,hresult)
+	     (cffi:mem-ref ,foreign-result ,foreign-result-type)
+	     (handle-com-error ,hresult))))))
